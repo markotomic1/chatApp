@@ -1,48 +1,48 @@
+import { doc, onSnapshot } from "firebase/firestore";
 import React from "react";
+import { useContext } from "react";
+import { useEffect } from "react";
+import { useState } from "react";
+import { AuthContext } from "../context/AuthContenxt";
+import { ChatContext } from "../context/ChatContext";
+import { db } from "../firebase";
 
 const Chats = () => {
+  const [chats, setChats] = useState([]);
+  const currentUser = useContext(AuthContext);
+  const { dispatch } = useContext(ChatContext);
+
+  useEffect(() => {
+    const getChats = () => {
+      const unsub = onSnapshot(doc(db, "userChats", currentUser.uid), (doc) => {
+        setChats(doc.data());
+      });
+      return () => {
+        unsub();
+      };
+    };
+    currentUser.uid && getChats();
+  }, [currentUser.uid]);
+
+  const handleSelect = (user) => {
+    dispatch({ type: "CHANGE_USER", payload: user });
+  };
   return (
     <div className='chats'>
-      <div className='userChat'>
-        <img
-          src='https://images.pexels.com/photos/10288854/pexels-photo-10288854.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load'
-          alt=''
-        />
-        <div className='userChatInfo'>
-          <span>Jane</span>
-          <p>Hello</p>
-        </div>
-      </div>
-      <div className='userChat'>
-        <img
-          src='https://images.pexels.com/photos/10288854/pexels-photo-10288854.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load'
-          alt=''
-        />
-        <div className='userChatInfo'>
-          <span>Jane</span>
-          <p>Hello</p>
-        </div>
-      </div>
-      <div className='userChat'>
-        <img
-          src='https://images.pexels.com/photos/10288854/pexels-photo-10288854.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load'
-          alt=''
-        />
-        <div className='userChatInfo'>
-          <span>Jane</span>
-          <p>Hello</p>
-        </div>
-      </div>
-      <div className='userChat'>
-        <img
-          src='https://images.pexels.com/photos/10288854/pexels-photo-10288854.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load'
-          alt=''
-        />
-        <div className='userChatInfo'>
-          <span>Jane</span>
-          <p>Hello</p>
-        </div>
-      </div>
+      {chats &&
+        Object.entries(chats)?.map((chat) => (
+          <div
+            className='userChat'
+            key={chat[0]}
+            onClick={() => handleSelect(chat[1].userInfo)}
+          >
+            <img src={chat[1]?.userInfo.photoURL} alt='' />
+            <div className='userChatInfo'>
+              <span>{chat[1]?.userInfo.displayName}</span>
+              <p>{chat[1]?.userInfo.lastText}</p>
+            </div>
+          </div>
+        ))}
     </div>
   );
 };

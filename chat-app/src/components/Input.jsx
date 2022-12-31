@@ -4,7 +4,13 @@ import Attach from "../img/attach.png";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContenxt";
 import { useState } from "react";
-import { arrayUnion, doc, Timestamp, updateDoc } from "firebase/firestore";
+import {
+  arrayUnion,
+  doc,
+  serverTimestamp,
+  Timestamp,
+  updateDoc,
+} from "firebase/firestore";
 import { db, storage } from "../firebase";
 import { v4 as uuid } from "uuid";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
@@ -50,6 +56,21 @@ const Input = () => {
         }),
       });
     }
+
+    await updateDoc(doc(db, "userChats", currentUser.uid), {
+      [data.chatId + ".lastMessage"]: {
+        text,
+      },
+      [data.chatId + ".date"]: serverTimestamp(),
+    });
+    await updateDoc(doc(db, "userChats", data.user.uid), {
+      [data.chatId + ".lastMessage"]: {
+        text,
+      },
+      [data.chatId + ".date"]: serverTimestamp(),
+    });
+    setText("");
+    setImg(null);
   };
   return (
     <div className='input'>
@@ -57,6 +78,7 @@ const Input = () => {
         type='text'
         placeholder='Type something...'
         onChange={(e) => setText(e.target.value)}
+        value={text}
       />
       <div className='send'>
         <img src={Attach} alt='' />
